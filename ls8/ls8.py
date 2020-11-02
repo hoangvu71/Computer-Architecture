@@ -3,9 +3,12 @@
 """Main."""
 
 import sys
+
 from cpu import *
 
-cpu = CPU()
 
-cpu.load()
+cpu = CPU()
+path = f'examples/{sys.argv[1]}'
+
+cpu.load(path)
 cpu.run()
