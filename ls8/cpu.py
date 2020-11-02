@@ -94,39 +94,50 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        ir = self.ram[self.pc]
-        operand_a = self.ram[self.pc + 1]
-        operand_b = self.ram[self.pc + 2]
+        
         LDI = 0b10000010
         PRN = 0b01000111
         HLT = 0b00000001
         MUL = 0b10100010
-        while ir != HLT:
+
+        instructions_dict = {}
+        instructions_dict[LDI] = self.LDI
+        instructions_dict[MUL] = self.MUL
+        instructions_dict[PRN] = self.PRN
+
+        running = True
+        while running:
+            ir = self.ram[self.pc]
+            operand_a = self.ram[self.pc + 1]
+            operand_b = self.ram[self.pc + 2]
             if ir == LDI:
-                self.ram_write(operand_a, operand_b)
-                self.pc += 3
+                instructions_dict[LDI](operand_a, operand_b)
 
-                # update ir and operands
-                ir = self.ram[self.pc]
-                operand_a = self.ram[self.pc + 1]
-                operand_b = self.ram[self.pc + 2]
             elif ir == PRN:
-                print(self.ram_read(operand_a))
-                self.pc += 2
-                
-                # update ir and operands
-                ir = self.ram[self.pc]
-                operand_a = self.ram[self.pc + 1]
-                operand_b = self.ram[self.pc + 2]
-            elif ir == MUL:
-                self.alu("MUL", operand_a, operand_b)
-                self.pc += 3
+                instructions_dict[PRN](operand_a)
 
-                # update ir and operands
-                ir = self.ram[self.pc]
-                operand_a = self.ram[self.pc + 1]
-                operand_b = self.ram[self.pc + 2]
-            
+            elif ir == MUL:
+                instructions_dict[MUL](operand_a, operand_b)
+
+            elif ir == HLT:
+                running = False
+                
+            else:
+                print("something is wrong")
+                sys.exit(3)
+
+    def LDI(self, operand_a, operand_b):
+        self.ram_write(operand_a, operand_b)
+        self.pc += 3
+
+    def MUL(self, operand_a, operand_b):
+        self.alu("MUL", operand_a, operand_b)
+        self.pc += 3
+    
+    def PRN(self, operand_a):
+        print(self.ram_read(operand_a))
+        self.pc += 2
+
     def ram_read(self, index):
         value = self.reg[index]
         return value
