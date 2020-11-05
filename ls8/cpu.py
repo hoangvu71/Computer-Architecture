@@ -99,11 +99,17 @@ class CPU:
         PRN = 0b01000111
         HLT = 0b00000001
         MUL = 0b10100010
+        POP = 0b01000110
+        PUSH = 0b01000101
 
         instructions_dict = {}
         instructions_dict[LDI] = self.LDI
         instructions_dict[MUL] = self.MUL
         instructions_dict[PRN] = self.PRN
+        instructions_dict[POP] = self.POP
+        instructions_dict[PUSH] = self.PUSH
+
+        self.reg[7] = 0b11111111
 
         running = True
         while running:
@@ -121,7 +127,13 @@ class CPU:
 
             elif ir == HLT:
                 running = False
-                
+            
+            elif ir == POP:
+                instructions_dict[POP](operand_a)
+            
+            elif ir == PUSH:
+                instructions_dict[PUSH](operand_a)
+
             else:
                 print("something is wrong")
                 sys.exit(3)
@@ -136,6 +148,23 @@ class CPU:
     
     def PRN(self, operand_a):
         print(self.ram_read(operand_a))
+        self.pc += 2
+
+    def PUSH(self, operand_a):
+        self.reg[7] -= 1
+        value_in_register = self.ram_read(operand_a)
+        # save it in ram
+        self.ram[self.reg[7]] = value_in_register
+
+        # pc counter
+        self.pc += 2
+
+    def POP(self, operand_a):
+        value_top_stack = self.ram[self.reg[7]]
+        self.ram_write(operand_a, value_top_stack)
+        self.reg[7] += 1
+
+        #pc counter
         self.pc += 2
 
     def ram_read(self, index):
