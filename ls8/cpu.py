@@ -99,8 +99,12 @@ class CPU:
         PRN = 0b01000111
         HLT = 0b00000001
         MUL = 0b10100010
+        ADD = 0b10100000
         POP = 0b01000110
         PUSH = 0b01000101
+        CALL = 0b01010000
+        RET = 0b00010001
+
 
         instructions_dict = {}
         instructions_dict[LDI] = self.LDI
@@ -108,6 +112,9 @@ class CPU:
         instructions_dict[PRN] = self.PRN
         instructions_dict[POP] = self.POP
         instructions_dict[PUSH] = self.PUSH
+        instructions_dict[CALL] = self.CALL
+        instructions_dict[RET] = self.RET
+        instructions_dict[ADD] = self.ADD
 
         self.reg[7] = 0b11111111
 
@@ -134,6 +141,15 @@ class CPU:
             elif ir == PUSH:
                 instructions_dict[PUSH](operand_a)
 
+            elif ir == CALL:
+                instructions_dict[CALL](operand_a)
+            
+            elif ir == RET:
+                instructions_dict[RET](operand_a)
+            
+            elif ir == ADD:
+                instructions_dict[ADD](operand_a, operand_b)
+
             else:
                 print("something is wrong")
                 sys.exit(3)
@@ -152,7 +168,7 @@ class CPU:
 
     def PUSH(self, operand_a):
         self.reg[7] -= 1
-        value_in_register = self.ram_read(operand_a)
+        value_in_register = self.reg[self.ram[self.pc + 1]]
         # save it in ram
         self.ram[self.reg[7]] = value_in_register
 
@@ -160,13 +176,26 @@ class CPU:
         self.pc += 2
 
     def POP(self, operand_a):
-        value_top_stack = self.ram[self.reg[7]]
-        self.ram_write(operand_a, value_top_stack)
+        self.reg[self.ram[self.pc + 1]] = self.ram[self.reg[7]]
         self.reg[7] += 1
 
         #pc counter
         self.pc += 2
 
+    def CALL(self, operand_a):
+        self.reg[7] -= 1
+
+        self.ram[self.reg[7]] = self.pc + 2
+
+        self.pc = self.ram_read(self.ram[self.pc + 1])
+
+    def RET(self, operand_a):
+        self.pc = self.ram[self.reg[7]]
+        self.reg[7] += 1
+
+    def ADD(self, operand_a, operand_b):
+        self.alu("ADD", operand_a, operand_b)
+        self.pc += 3
     def ram_read(self, index):
         value = self.reg[index]
         return value
